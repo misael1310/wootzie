@@ -8,7 +8,7 @@ const useVerifyToken = () => {
   const token = localStorage.getItem("token");
 
   const { data, error, isLoading } = useVerifyTokenQuery(undefined, {
-    skip: !token, // Omite la consulta si no hay token
+    skip: !token,
   });
 
   useEffect(() => {

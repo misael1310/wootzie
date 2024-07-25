@@ -1,45 +1,26 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import {
-  useVerifyTokenQuery,
-  useLoginMutation,
-} from "../features/auth/authApi";
-import { logOut, setCredentials } from "../features/auth/authSlice";
+import { useLoginMutation } from "../features/auth/authApi";
+import { setCredentials } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
+
+import { routes } from "../utils/routes";
+import { useVerifyToken } from "./useVerifyToken";
 
 export const useAuth = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
 
   const {
-    data: tokenData,
-    error: tokenError,
     isLoading: tokenLoading,
-  } = useVerifyTokenQuery(undefined, {
-    skip: !token,
-  });
-
+    error: tokenError,
+    success: tokenData,
+  } = useVerifyToken();
   const [login, { isLoading: loginLoading }] = useLoginMutation();
 
   useEffect(() => {
-    if (!token) {
-      dispatch(logOut());
-      return;
-    }
-
-    if (tokenError) {
-      dispatch(logOut());
-    } else if (tokenData) {
-      dispatch(
-        setCredentials({
-          user: tokenData.user,
-          token,
-        })
-      );
-      return navigate("/dashboard");
-    }
-  }, [token, tokenData, tokenError, dispatch]);
+    if (tokenData) navigate(routes.dashboardPage);
+  }, [tokenLoading, tokenError, tokenData]);
 
   const handleLogin = async (values) => {
     const data = {
@@ -59,5 +40,5 @@ export const useAuth = () => {
     }
   };
 
-  return { tokenLoading, handleLogin, loginLoading };
+  return { tokenLoading, tokenData, handleLogin, loginLoading };
 };

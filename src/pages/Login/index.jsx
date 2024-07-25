@@ -4,7 +4,7 @@ import { LoginForm } from "../../components/LoginForm";
 const { Title } = Typography;
 
 const Login = () => {
-  const { tokenLoading, handleLogin, loginLoading } = useAuth();
+  const { tokenLoading, tokenData, handleLogin, loginLoading } = useAuth();
 
   if (tokenLoading) return "Loading...";
 
@@ -18,16 +18,20 @@ const Login = () => {
   };
 
   return (
-    <Row justify="center" align="middle" style={{ padding: "0 20px" }}>
-      <Col xs={24} sm={20} md={16} lg={12} xl={8}>
-        <div>
-          <Title>Login</Title>
-          <p>Hi, Welcome back 👋</p>
-          <Divider />
-        </div>
-        <LoginForm onFinish={onFinish} isLoading={loginLoading} />
-      </Col>
-    </Row>
+    <>
+      {!tokenData && (
+        <Row justify="center" align="middle" style={{ padding: "0 20px" }}>
+          <Col xs={24} sm={20} md={16} lg={12} xl={8}>
+            <div>
+              <Title>Login</Title>
+              <p>Hi, Welcome back 👋</p>
+              <Divider />
+            </div>
+            <LoginForm onFinish={onFinish} isLoading={loginLoading} />
+          </Col>
+        </Row>
+      )}
+    </>
   );
 };
 
