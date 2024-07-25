@@ -1,3 +1,8 @@
+import { useLoginMutation } from "../../features/auth/authApi";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../../features/auth/authSlice";
+import { useNavigate } from "react-router-dom";
+
 import {
   Button,
   Checkbox,
@@ -7,19 +12,37 @@ import {
   Row,
   Divider,
   Typography,
+  message,
 } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 const { Title } = Typography;
 import "./Login.css";
 
-const onFinish = (values) => {
-  console.log("Success:", values);
-};
-const onFinishFailed = (errorInfo) => {
-  console.log("Failed:", errorInfo);
-};
-
 const Login = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [login, { isLoading }] = useLoginMutation();
+
+  const onFinish = async (values) => {
+    const data = {
+      Email: values.username,
+      Password: values.password,
+    };
+    console.log(data);
+    try {
+      const userData = await login(data).unwrap();
+      dispatch(setCredentials(userData));
+      message.success("Login successful!");
+      navigate("/dashboard");
+    } catch (error) {
+      message.error("Login failed. Please check your credentials.");
+    }
+  };
+
+  const onFinishFailed = (errorInfo) => {
+    console.log("Failed:", errorInfo);
+  };
+
   return (
     <>
       <Row
