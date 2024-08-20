@@ -2,8 +2,10 @@ import { Layout, theme } from "antd";
 import { LayoutSidebar } from "../../components/DashboardLayout/LayoutSidebar";
 import { LayoutHeader } from "../../components/DashboardLayout/LayoutHeader";
 import { LayoutFooter } from "../../components/DashboardLayout/LayoutFooter";
+import { useAuth } from "../../hooks/useAuth";
 
 const { Content } = Layout;
+
 const Dashboard = ({ children }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },

@@ -1,8 +1,9 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { logOut } from "./authSlice";
+import { logOut, setCredentials } from "./authSlice";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: `${import.meta.env.VITE_APP_API_HOST}`,
+  credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth.token;
     if (token) {
@@ -15,13 +16,29 @@ const baseQuery = fetchBaseQuery({
 const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
 
-  console.group("authApi.jsx");
-  console.log({ resultError: result?.error });
-  console.log({ resultErrorStatus: result?.error?.status });
-  console.groupEnd("authApi.jsx");
-
   if (result?.error?.status === 401) {
-    api.dispatch(logOut());
+    // Try to Refresh the Token
+    const refreshResult = await baseQuery(
+      {
+        url: "/auth/refreshToken",
+        method: "POST",
+      },
+      api,
+      extraOptions
+    );
+
+    if (refreshResult?.error?.status) {
+      return result;
+    }
+
+    const { token, user } = refreshResult.data;
+    if (token && user) {
+      api.dispatch(setCredentials({ token, user }));
+      // Retry the original query with new token
+      result = await baseQuery(args, api, extraOptions);
+    } else {
+      api.dispatch(logOut());
+    }
   }
 
   return result;
@@ -52,8 +69,19 @@ export const authApi = createApi({
         body: {},
       }),
     }),
+    logOut: builder.query({
+      query: () => ({
+        url: "/auth/logout",
+        method: "POST",
+        body: {},
+      }),
+    }),
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useVerifyTokenQuery } =
-  authApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useVerifyTokenQuery,
+  useLazyLogOutQuery,
+} = authApi;

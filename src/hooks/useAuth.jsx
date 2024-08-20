@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { useLoginMutation } from "../features/auth/authApi";
-import { setCredentials } from "../features/auth/authSlice";
+import { useLoginMutation, useLazyLogOutQuery } from "../features/auth/authApi";
+import { setCredentials, logOut } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 
 import { routes } from "../utils/routes";
@@ -16,7 +16,10 @@ export const useAuth = () => {
     error: tokenError,
     success: tokenData,
   } = useVerifyToken();
+
   const [login, { isLoading: loginLoading }] = useLoginMutation();
+  const [triggerLogOut, { isLoading: logOutLoading, error: logOutError }] =
+    useLazyLogOutQuery();
 
   useEffect(() => {
     if (tokenData) navigate(routes.dashboardPage);
@@ -29,16 +32,24 @@ export const useAuth = () => {
     };
     try {
       const userData = await login(data).unwrap();
-      console.group("useAuth");
-      console.log(userData);
-      console.groupEnd("useAuth");
+      console.group("useAuth - handleLogin");
+      console.groupEnd("useAuth - handleLogin");
       dispatch(setCredentials(userData));
-      localStorage.setItem("token", userData.token);
-      navigate("/dashboard");
+      navigate(routes.dashboardPage);
     } catch (error) {
       throw new Error("Login failed. Please check your credentials.");
     }
   };
 
-  return { tokenLoading, tokenData, handleLogin, loginLoading };
+  const handleLogOut = async () => {
+    try {
+      const result = await triggerLogOut().unwrap();
+      navigate(routes.loginPage);
+      dispatch(logOut());
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  return { tokenLoading, tokenData, loginLoading, handleLogin, handleLogOut };
 };
